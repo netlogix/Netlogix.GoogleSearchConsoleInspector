@@ -1,0 +1,82 @@
+.style__view___EC1q2 {
+    margin: -1rem;
+    padding: 0;
+    background-color: #222;
+}
+
+.style__viewbutton___11-L6 {
+    display: block;
+    width: 100%;
+    margin-bottom: 1rem !important;
+}
+
+.style__inner___1OdkG {
+    background-color: #323232;
+    padding: 1rem;
+    word-break: break-all;
+}
+
+.style__inner___1OdkG + .style__inner___1OdkG {
+    margin-top: 1rem;
+}
+
+.style__block___2ZjJG {
+    display: block;
+}
+
+.style__richitem___3jT4G {
+}
+
+.style__richitem___3jT4G .style__richitem___3jT4G {
+    margin-left: .5rem;
+}
+
+.style__panelheader___3u773 h2 {
+    padding: 0;
+}
+
+.style__panelheader___3u773 .style__ReactCollapse--content___m7Cpg > div {
+    padding: 0;
+}
+
+.style__panelcontents___iLkMH {
+    padding: 0 !important;
+}
+
+.style__hr___7Olvi {
+    margin: .75rem 0;
+}
+
+.style__hr___7Olvi:after {
+    content: '';
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: #3f3f3f;
+}
+
+.style__hr___7Olvi + .style__hr___7Olvi, .style__hr___7Olvi:last-child {
+    display: none;
+}
+
+.style__list___3nmb3 {
+    margin: 0 0 0 .75rem;
+}
+
+.style__list___3nmb3 li {
+    display: list-item;
+}
+
+.style__link___1i9jQ, .style__link___1i9jQ:visited, .style__link___1i9jQ:active {
+    color: white;
+}
+
+.style__link___1i9jQ:hover {
+    color: #00ADEE;
+    text-decoration: underline;
+}
+
+
+/*# sourceMappingURL=Plugin.css.map*/
