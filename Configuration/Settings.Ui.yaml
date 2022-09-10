@@ -1,0 +1,11 @@
+Neos:
+  Neos:
+    Ui:
+      resources:
+        javascript:
+          'Netlogix.GoogleSearchConsoleInspector':
+            resource: 'resource://Netlogix.GoogleSearchConsoleInspector/Public/InspectorView/Plugin.js'
+
+        stylesheets:
+          'Netlogix.GoogleSearchConsoleInspector':
+            resource: 'resource://Netlogix.GoogleSearchConsoleInspector/Public/InspectorView/Plugin.css'

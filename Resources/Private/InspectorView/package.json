@@ -1,0 +1,15 @@
+{
+    "description": "Netlogix.GoogleSearchConsoleInspector View",
+    "private": true,
+    "scripts": {
+        "build": "neos-react-scripts build",
+        "watch": "neos-react-scripts watch"
+    },
+    "neos": {
+        "buildTargetDirectory": "../../Public/InspectorView/"
+    },
+    "devDependencies": {
+        "@neos-project/neos-ui-extensibility": "~7.3.0",
+        "@neos-project/react-ui-components": "~7.3.0"
+    }
+}

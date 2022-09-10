@@ -1,0 +1,31 @@
+{
+    "name": "netlogix/googlesearchconsoleinspector",
+    "description": "Neos package that adds an Inspector View for the Google Search Console Inspection to document nodes.",
+    "version": "1.0.0",
+    "license": "MIT",
+    "type": "neos-package",
+    "require": {
+        "php": "^7.4 || ^8.0",
+        "neos/neos": "^7.3 || ^8.1",
+        "neos/neos-ui": "^7.3 || ^8.1",
+        "flowpack/googleapiclient": "^1.3",
+        "google/apiclient": "^2.12",
+        "google/apiclient-services": "v0.265.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Netlogix\\GoogleSearchConsoleInspector\\": "Classes/"
+        }
+    },
+    "scripts": {
+        "pre-autoload-dump": "Google\\Task\\Composer::cleanup"
+    },
+    "extra": {
+        "neos": {
+            "package-key": "Netlogix.GoogleSearchConsoleInspector"
+        },
+        "google/apiclient-services": [
+            "SearchConsole"
+        ]
+    }
+}

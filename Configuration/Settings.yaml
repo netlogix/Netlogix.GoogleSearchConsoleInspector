@@ -1,0 +1,11 @@
+Netlogix:
+  GoogleSearchConsoleInspector:
+
+    # Mapping of Google Search Console Properties to URL prefixes
+    siteUrlMapping:
+#      'sc-domain:example.org':
+#        - 'https://www.example.org'
+#        - 'https://example.org'
+#
+#      'https://www.example.com':
+#        - 'https://www.example.com'

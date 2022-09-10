@@ -1,0 +1,31 @@
+'Netlogix.GoogleSearchConsoleInspector:Inspectable':
+  abstract: true
+  ui:
+    inspector:
+      tabs:
+        nlxGoogleSearchConsoleInspector:
+          label: 'Google Search Console'
+          position: 1000
+          icon: 'icon-search'
+      groups:
+        nlxGoogleSearchConsoleInspectorInspection:
+          label: 'Google Search Console Inspection'
+          icon: 'icon-search'
+          tab: 'nlxGoogleSearchConsoleInspector'
+          position: 10
+          collapsed: false
+      views:
+        nlxGoogleSearchConsoleInspectorInspectionView:
+          group: 'nlxGoogleSearchConsoleInspectorInspection'
+          view: 'Netlogix.GoogleSearchConsoleInspector/InspectorView/Inspector'
+          viewOptions:
+            dataSource: 'nlxGoogleSearchConsoleInspectorInspection'
+            collection: 'rows'
+            columns:
+              -
+                data: 'referencing'
+                label: 'Referencing'
+
+'Neos.Neos:Page':
+  superTypes:
+    'Netlogix.GoogleSearchConsoleInspector:Inspectable': true

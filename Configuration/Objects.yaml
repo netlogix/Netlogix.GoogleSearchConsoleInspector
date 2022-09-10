@@ -1,0 +1,15 @@
+Netlogix\GoogleSearchConsoleInspector\Domain\Service\InspectionService:
+  arguments:
+    1:
+      object:
+        factoryObjectName: Flowpack\GoogleApiClient\Service\ClientFactory
+        factoryMethodName: create
+
+  properties:
+    cache:
+      object:
+        factoryObjectName: Neos\Flow\Cache\CacheManager
+        factoryMethodName: getCache
+        arguments:
+          1:
+            value: Netlogix_GoogleSearchConsoleInspector_Responses

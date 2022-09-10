@@ -1,0 +1,79 @@
+.view {
+    margin: -1rem;
+    padding: 0;
+    background-color: #222;
+}
+
+.viewbutton {
+    display: block;
+    width: 100%;
+    margin-bottom: 1rem !important;
+}
+
+.inner {
+    background-color: #323232;
+    padding: 1rem;
+    word-break: break-all;
+}
+
+.inner + .inner {
+    margin-top: 1rem;
+}
+
+.block {
+    display: block;
+}
+
+.richitem {
+}
+
+.richitem .richitem {
+    margin-left: .5rem;
+}
+
+.panelheader h2 {
+    padding: 0;
+}
+
+.panelheader .ReactCollapse--content > div {
+    padding: 0;
+}
+
+.panelcontents {
+    padding: 0 !important;
+}
+
+.hr {
+    margin: .75rem 0;
+}
+
+.hr:after {
+    content: '';
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: #3f3f3f;
+}
+
+.hr + .hr, .hr:last-child {
+    display: none;
+}
+
+.list {
+    margin: 0 0 0 .75rem;
+}
+
+.list li {
+    display: list-item;
+}
+
+.link, .link:visited, .link:active {
+    color: white;
+}
+
+.link:hover {
+    color: #00ADEE;
+    text-decoration: underline;
+}
