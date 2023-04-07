@@ -2,10 +2,6 @@
 
 This package adds an inspector tab for document level nodes, which provides insights into Google Search Console data for the given document, provided by the [Google Search Console URL Inspection API](https://developers.google.com/search/blog/2022/01/url-inspection-api).
 
-### Authentication
-
-Please refer to [the flowpack-googleapiclient documentation](https://github.com/Flowpack/Flowpack.GoogleApiClient#authentication).
-
 ### Installation
 
 ```shell
@@ -18,9 +14,33 @@ composer require netlogix/googlesearchconsoleinspector
 | ^ 8.1                   |
 
 ### Configuration
+A JSON credentials file for a Google service account is required. See [Create a service account](https://developers.google.com/workspace/guides/create-credentials?hl=en#create_a_service_account) for details.
+The path to the credentials file should be set in the environment variable `GOOGLE_APPLICATION_CREDENTIALS`.
 
-Under [Configuration/Settings.yaml](./Configuration/Settings.yaml) add the mapping of Google Search Console Properties to URL prefixes for your site.
+Alternatively, the path can be set at the configuration path `Netlogix.GoogleSearchConsoleInspector.api.clientConfig.credentials`.
+
+At `Netlogix.GoogleSearchConsoleInspector.siteUrlMapping` add the mapping of Google Search Console Properties to URL prefixes for your site.
 Please refer to [Google's documentation](https://developers.google.com/webmaster-tools/v1/urlInspection.index/inspect) for details.
+
+```yaml
+Netlogix:
+  GoogleSearchConsoleInspector:
+    api:
+      # See https://github.com/googleapis/google-api-php-client/blob/main/src/Client.php#L112
+      clientConfig:
+        'application_name': 'Neos Search Console Inspector'
+
+        # See https://developers.google.com/workspace/guides/create-credentials?hl=en#create_a_service_account
+        'credentials': '%env:GOOGLE_APPLICATION_CREDENTIALS%'
+
+    siteUrlMapping:
+      'sc-domain:example.org':
+        - 'https://www.example.org'
+        - 'https://example.org'
+
+      'https://www.example.com':
+        - 'https://www.example.com'
+```
 
 ### Usage
 

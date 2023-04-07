@@ -1,5 +1,15 @@
 Netlogix:
   GoogleSearchConsoleInspector:
+    api:
+      # See https://github.com/googleapis/google-api-php-client/blob/main/src/Client.php#L112
+      clientConfig:
+        'application_name': 'Neos Search Console Inspector'
+
+        # See https://developers.google.com/workspace/guides/create-credentials?hl=en#create_a_service_account
+        'credentials': '%env:GOOGLE_APPLICATION_CREDENTIALS%'
+
+        'scopes':
+          - '%\Google\Service\SearchConsole::WEBMASTERS_READONLY%'
 
     # Mapping of Google Search Console Properties to URL prefixes
     siteUrlMapping:
