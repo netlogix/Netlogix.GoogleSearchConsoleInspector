@@ -6,6 +6,7 @@ namespace Netlogix\GoogleSearchConsoleInspector\Domain\Service;
 use Google\Client;
 use Google\Service\SearchConsole;
 use GuzzleHttp\Psr7\Uri;
+use Neos\Cache\Frontend\VariableFrontend;
 use Neos\Flow\Annotations as Flow;
 use Netlogix\GoogleSearchConsoleInspector\Exception\NoSiteUrlFoundForUri;
 
@@ -14,7 +15,6 @@ use Netlogix\GoogleSearchConsoleInspector\Exception\NoSiteUrlFoundForUri;
  */
 final class InspectionService extends SearchConsole
 {
-
     /**
      * @var array
      * @Flow\InjectConfiguration(path="siteUrlMapping")
@@ -29,9 +29,6 @@ final class InspectionService extends SearchConsole
     public function __construct(Client $client)
     {
         parent::__construct($client);
-
-        $client->addScope(SearchConsole::WEBMASTERS_READONLY);
-        $client->setAuthConfig(getenv('GOOGLE_APPLICATION_CREDENTIALS'));
     }
 
     public function inspectUri(Uri $uri, bool $force = false): SearchConsole\UrlInspectionResult

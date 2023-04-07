@@ -2,8 +2,11 @@ Netlogix\GoogleSearchConsoleInspector\Domain\Service\InspectionService:
   arguments:
     1:
       object:
-        factoryObjectName: Flowpack\GoogleApiClient\Service\ClientFactory
+        factoryObjectName: Netlogix\GoogleSearchConsoleInspector\Factory\ClientFactory
         factoryMethodName: create
+        arguments:
+          1:
+            setting: 'Netlogix.GoogleSearchConsoleInspector.api.clientConfig'
 
   properties:
     cache:
