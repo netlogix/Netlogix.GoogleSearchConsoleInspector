@@ -42,3 +42,23 @@ jobs:
       - name: 'yarn build'
         run: yarn build
         working-directory: ${{ env.PLUGIN_FOLDER }}
+
+      - name: 'Create pull request'
+        id: cpr
+        if: github.ref == 'refs/heads/master'
+        uses: peter-evans/create-pull-request@v4.2.4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "[automated] Update Plugin Assets"
+          base: 'main'
+          branch: 'automated-build-plugin-assets'
+          title: '[automated] Update Plugin Assets'
+          delete-branch: true
+
+      - name: 'Enable Pull Request auto merge'
+        if: github.ref == 'refs/heads/master' && steps.cpr.outputs.pull-request-operation == 'created'
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+          merge-method: merge
