@@ -1,7 +1,6 @@
 {
     "name": "netlogix/googlesearchconsoleinspector",
     "description": "Neos package that adds an Inspector View for the Google Search Console Inspection to document nodes.",
-    "version": "1.0.0",
     "license": "MIT",
     "type": "neos-package",
     "require": {
