@@ -25,7 +25,3 @@
               -
                 data: 'referencing'
                 label: 'Referencing'
-
-'Neos.Neos:Page':
-  superTypes:
-    'Netlogix.GoogleSearchConsoleInspector:Inspectable': true
