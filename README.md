@@ -42,6 +42,14 @@ Netlogix:
         - 'https://www.example.com'
 ```
 
+For document nodetypes you want to inspect, add the `Netlogix.GoogleSearchConsoleInspector:Inspectable` to the supertypes. This will add the inspector tab to the document node.
+
+```yaml
+'Neos.Demo:Document':
+  superTypes:
+    'Netlogix.GoogleSearchConsoleInspector:Inspectable': true
+```
+
 ### Usage
 
 On document level nodes a new tab will be added in the left-hand inspector window. It provides the following functionality:
