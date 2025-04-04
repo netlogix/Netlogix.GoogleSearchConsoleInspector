@@ -10,8 +10,8 @@ composer require netlogix/googlesearchconsoleinspector
 
 | Supported Neos Versions |
 |-------------------------|
-| ^ 7.3                   |
-| ^ 8.1                   |
+| ^ 8.3                   |
+| ~ 9.0.0                 |
 
 ### Configuration
 A JSON credentials file for a Google service account is required. See [Create a service account](https://developers.google.com/workspace/guides/create-credentials?hl=en#create_a_service_account) for details.
