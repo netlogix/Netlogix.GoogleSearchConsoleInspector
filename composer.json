@@ -5,8 +5,8 @@
     "type": "neos-package",
     "require": {
         "php": "^8.3",
-        "neos/neos": "^8.3 || ~9.0.0",
-        "neos/neos-ui": "^8.3 || ~9.0.0",
+        "neos/neos": "^8.3 || ^9.0",
+        "neos/neos-ui": "^8.3 || ^9.0",
         "google/apiclient": "^2.18",
         "google/apiclient-services": "v0.396.0"
     },
