@@ -416,26 +416,6 @@ module.exports = (0, _readFromConsumerApi2.default)('NeosProjectPackages')().Rea
 
 /***/ }),
 
-/***/ "./node_modules/@neos-project/neos-ui-extensibility/src/shims/vendor/plow-js/index.js":
-/*!********************************************************************************************!*\
-  !*** ./node_modules/@neos-project/neos-ui-extensibility/src/shims/vendor/plow-js/index.js ***!
-  \********************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _readFromConsumerApi = __webpack_require__(/*! ../../../../dist/readFromConsumerApi */ "./node_modules/@neos-project/neos-ui-extensibility/dist/readFromConsumerApi.js");
-
-var _readFromConsumerApi2 = _interopRequireDefault(_readFromConsumerApi);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-module.exports = (0, _readFromConsumerApi2.default)('vendor')().plow;
-
-/***/ }),
-
 /***/ "./node_modules/@neos-project/neos-ui-extensibility/src/shims/vendor/prop-types/index.js":
 /*!***********************************************************************************************!*\
   !*** ./node_modules/@neos-project/neos-ui-extensibility/src/shims/vendor/prop-types/index.js ***!
@@ -1020,8 +1000,6 @@ var _propTypes = __webpack_require__(/*! prop-types */ "./node_modules/@neos-pro
 
 var _propTypes2 = _interopRequireDefault(_propTypes);
 
-var _plowJs = __webpack_require__(/*! plow-js */ "./node_modules/@neos-project/neos-ui-extensibility/src/shims/vendor/plow-js/index.js");
-
 var _style = __webpack_require__(/*! ./style.css */ "./src/Inspector/style.css");
 
 var _style2 = _interopRequireDefault(_style);
@@ -1037,6 +1015,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+// Neos 9's neos-ui no longer exposes plow-js via its host vendor API (the
+// "@vendor" registry lost its `plow` key), so the extensibility shim for
+// 'plow-js' resolves to undefined at runtime. Use a minimal inline
+// replacement for the handful of $get(path, obj) calls below instead.
+var $get = function $get(path, obj) {
+    return path.split('.').reduce(function (acc, key) {
+        return acc == null ? undefined : acc[key];
+    }, obj);
+};
 
 var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp = _class2 = function (_PureComponent) {
     _inherits(InspectorView, _PureComponent);
@@ -1055,8 +1043,8 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
             var data = this.props.data;
 
 
-            var referringUrls = (0, _plowJs.$get)('indexStatusResult.referringUrls', data);
-            var richItems = (0, _plowJs.$get)('richResultsResult.detectedItems', data);
+            var referringUrls = $get('indexStatusResult.referringUrls', data);
+            var richItems = $get('richResultsResult.detectedItems', data);
 
             return _react2.default.createElement(
                 'div',
@@ -1068,7 +1056,7 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
                         style: 'lighter',
                         title: 'View in Google Search Console',
                         onClick: function onClick() {
-                            return window.open((0, _plowJs.$get)('inspectionResultLink', data), '_blank');
+                            return window.open($get('inspectionResultLink', data), '_blank');
                         }
                     },
                     _react2.default.createElement(_reactUiComponents.Icon, { icon: 'share', padded: 'right' }),
@@ -1090,20 +1078,20 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
                         _react2.default.createElement(
                             'div',
                             { className: _style2.default.inner },
-                            this.renderVerdict((0, _plowJs.$get)('indexStatusResult.verdict', data), (0, _plowJs.$get)('indexStatusResult.coverageState', data)),
-                            this.renderVerdict((0, _plowJs.$get)('mobileUsabilityResult.verdict', data), 'Mobile Usability'),
-                            this.renderVerdict((0, _plowJs.$get)('richResultsResult.verdict', data), 'Rich Results'),
-                            (0, _plowJs.$get)('indexStatusResult.lastCrawlTime', data) && _react2.default.createElement(
+                            this.renderVerdict($get('indexStatusResult.verdict', data), $get('indexStatusResult.coverageState', data)),
+                            this.renderVerdict($get('mobileUsabilityResult.verdict', data), 'Mobile Usability'),
+                            this.renderVerdict($get('richResultsResult.verdict', data), 'Rich Results'),
+                            $get('indexStatusResult.lastCrawlTime', data) && _react2.default.createElement(
                                 'span',
                                 { className: _style2.default.block },
                                 'Last crawl time \xA0',
-                                new Date((0, _plowJs.$get)('indexStatusResult.lastCrawlTime', data)).toLocaleString()
+                                new Date($get('indexStatusResult.lastCrawlTime', data)).toLocaleString()
                             )
                         )
                     )
                 ),
-                (0, _plowJs.$get)('indexStatusResult.verdict', data) === 'PASS' && _react2.default.createElement('div', { className: _style2.default.hr }),
-                (0, _plowJs.$get)('indexStatusResult.verdict', data) === 'PASS' && _react2.default.createElement(
+                $get('indexStatusResult.verdict', data) === 'PASS' && _react2.default.createElement('div', { className: _style2.default.hr }),
+                $get('indexStatusResult.verdict', data) === 'PASS' && _react2.default.createElement(
                     _reactUiComponents.ToggablePanel,
                     { style: 'condensed' },
                     _react2.default.createElement(
@@ -1118,7 +1106,7 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
                         _react2.default.createElement(
                             'div',
                             { className: _style2.default.inner },
-                            (0, _plowJs.$get)('indexStatusResult.googleCanonical', data) && _react2.default.createElement(
+                            $get('indexStatusResult.googleCanonical', data) && _react2.default.createElement(
                                 'div',
                                 null,
                                 _react2.default.createElement(
@@ -1126,9 +1114,9 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
                                     { className: _style2.default.block },
                                     'Google Canonical'
                                 ),
-                                (0, _plowJs.$get)('indexStatusResult.googleCanonical', data)
+                                $get('indexStatusResult.googleCanonical', data)
                             ),
-                            (0, _plowJs.$get)('indexStatusResult.userCanonical', data) && _react2.default.createElement(
+                            $get('indexStatusResult.userCanonical', data) && _react2.default.createElement(
                                 'div',
                                 null,
                                 _react2.default.createElement(
@@ -1136,7 +1124,7 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
                                     { className: _style2.default.block },
                                     'User Canonical'
                                 ),
-                                (0, _plowJs.$get)('indexStatusResult.userCanonical', data)
+                                $get('indexStatusResult.userCanonical', data)
                             )
                         )
                     )
@@ -1175,8 +1163,8 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
                         )
                     )
                 ),
-                (0, _plowJs.$get)('indexStatusResult.verdict', data) === 'PASS' && _react2.default.createElement('div', { className: _style2.default.hr }),
-                (0, _plowJs.$get)('richResultsResult.verdict', data) === 'PASS' && _react2.default.createElement(
+                $get('indexStatusResult.verdict', data) === 'PASS' && _react2.default.createElement('div', { className: _style2.default.hr }),
+                $get('richResultsResult.verdict', data) === 'PASS' && _react2.default.createElement(
                     _reactUiComponents.ToggablePanel,
                     { style: 'condensed' },
                     _react2.default.createElement(
