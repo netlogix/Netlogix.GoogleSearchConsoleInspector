@@ -1,9 +1,14 @@
 import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
-import {$get} from 'plow-js';
 import style from './style.css';
 import {dataLoader} from "@neos-project/neos-ui-views";
 import { Button, Icon, ToggablePanel } from "@neos-project/react-ui-components";
+
+// Neos 9's neos-ui no longer exposes plow-js via its host vendor API (the
+// "@vendor" registry lost its `plow` key), so the extensibility shim for
+// 'plow-js' resolves to undefined at runtime. Use a minimal inline
+// replacement for the handful of $get(path, obj) calls below instead.
+const $get = (path, obj) => path.split('.').reduce((acc, key) => (acc == null ? undefined : acc[key]), obj);
 
 @dataLoader()
 export default class InspectorView extends PureComponent {
