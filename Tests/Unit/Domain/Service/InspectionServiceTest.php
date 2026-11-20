@@ -5,6 +5,10 @@ namespace Netlogix\GoogleSearchConsoleInspector\Tests\Unit\Domain\Service;
 
 use Google\Client;
 use Google\Service\SearchConsole\ApiDataRow;
+use Google\Service\SearchConsole\InspectUrlIndexRequest;
+use Google\Service\SearchConsole\InspectUrlIndexResponse;
+use Google\Service\SearchConsole\Resource\UrlInspectionIndex;
+use Google\Service\SearchConsole\UrlInspectionResult;
 use Google\Service\SearchConsole\Resource\Searchanalytics;
 use Google\Service\SearchConsole\SearchAnalyticsQueryRequest;
 use Google\Service\SearchConsole\SearchAnalyticsQueryResponse;
@@ -115,6 +119,80 @@ class InspectionServiceTest extends UnitTestCase
 
         $this->service->pagePerformance($uri, true);
         self::assertCount(4, $this->queries);
+    }
+
+    /**
+     * @test
+     */
+    public function inspectUriSendsTheLanguageAndCachesPerLanguage(): void
+    {
+        $languages = [];
+        $inspector = $this->createMock(UrlInspectionIndex::class);
+        $inspector->method('inspect')->willReturnCallback(
+            function (InspectUrlIndexRequest $request) use (&$languages) {
+                $languages[] = $request->getLanguageCode();
+                $response = new InspectUrlIndexResponse();
+                $response->setInspectionResult(new UrlInspectionResult());
+                return $response;
+            }
+        );
+        $this->service->urlInspection_index = $inspector;
+        $uri = new Uri('https://www.example.org/foo');
+
+        $this->service->inspectUri($uri, false, 'de');
+        $this->service->inspectUri($uri, false, 'de');
+        $this->service->inspectUri($uri);
+
+        self::assertSame(['de', 'en-US'], $languages);
+    }
+
+    /**
+     * @test
+     */
+    public function contentHintsFindQueriesCloseToTheFirstPage(): void
+    {
+        $hints = $this->service->contentHints([
+            self::query('top', 100, 2.0),
+            self::query('close', 50, 8.0),
+            self::query('closer', 80, 20.0),
+            self::query('far', 90, 20.1),
+            self::query('rare', 9, 12.0),
+        ], '');
+
+        self::assertSame(['closer', 'close'], array_column($hints['strikingDistance'], 'query'));
+    }
+
+    /**
+     * @test
+     */
+    public function contentHintsFindQueriesMissingInThePageText(): void
+    {
+        $hints = $this->service->contentHints([
+            self::query('skiclub spies', 40, 1.0),
+            self::query('Skilift Spies', 30, 5.0),
+            self::query('langlauf', 20, 5.0),
+            self::query('rare words', 9, 5.0),
+        ], 'Skiclub SPIES e.V. - Langlauf und mehr');
+
+        self::assertSame(['Skilift Spies'], array_column($hints['missingInText'], 'query'));
+    }
+
+    /**
+     * @test
+     */
+    public function contentHintsAreLimitedToTheQueriesWithTheMostImpressions(): void
+    {
+        $queries = array_map(static fn (int $i) => self::query('q' . $i, 10 + $i, 10.0), range(1, 8));
+
+        $hints = $this->service->contentHints($queries, '');
+
+        self::assertSame(['q8', 'q7', 'q6', 'q5', 'q4'], array_column($hints['strikingDistance'], 'query'));
+        self::assertCount(5, $hints['missingInText']);
+    }
+
+    private static function query(string $query, int $impressions, float $position): array
+    {
+        return ['query' => $query, 'clicks' => 0, 'impressions' => $impressions, 'position' => $position];
     }
 
     private static function row(string $key, int $clicks, int $impressions, float $position): ApiDataRow

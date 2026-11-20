@@ -1088,6 +1088,11 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
 
             var data = refreshed.get(this.props.focusedNodeContextPath) || this.props.data;
             var performance = $get('performance', data);
+            var strikingDistance = $get('performance.hints.strikingDistance', data) || [];
+            var missingInText = $get('performance.hints.missingInText', data) || [];
+            var googleCanonical = $get('indexStatusResult.googleCanonical', data);
+            var userCanonical = $get('indexStatusResult.userCanonical', data);
+            var canonicalMismatch = Boolean(googleCanonical && userCanonical && googleCanonical !== userCanonical);
 
             var referringUrls = $get('indexStatusResult.referringUrls', data);
             var richItems = $get('richResultsResult.detectedItems', data);
@@ -1200,7 +1205,7 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
                                 _react2.default.createElement(
                                     'tbody',
                                     null,
-                                    performance.queries.map(function (row) {
+                                    performance.queries.slice(0, 10).map(function (row) {
                                         return _react2.default.createElement(
                                             'tr',
                                             { key: row.query },
@@ -1231,6 +1236,51 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
                         )
                     )
                 ),
+                (strikingDistance.length > 0 || missingInText.length > 0) && _react2.default.createElement('div', { className: _style2.default.hr }),
+                (strikingDistance.length > 0 || missingInText.length > 0) && _react2.default.createElement(
+                    _reactUiComponents.ToggablePanel,
+                    { style: 'condensed' },
+                    _react2.default.createElement(
+                        _reactUiComponents.ToggablePanel.Header,
+                        { className: _style2.default.panelheader },
+                        _react2.default.createElement(_reactUiComponents.Icon, { icon: 'lightbulb', padded: 'right' }),
+                        'Content Hints'
+                    ),
+                    _react2.default.createElement(
+                        _reactUiComponents.ToggablePanel.Contents,
+                        { className: _style2.default.panelcontents },
+                        strikingDistance.length > 0 && _react2.default.createElement(
+                            'div',
+                            { className: _style2.default.inner },
+                            _react2.default.createElement(
+                                'b',
+                                { className: _style2.default.block },
+                                'Almost on page one'
+                            ),
+                            _react2.default.createElement(
+                                'span',
+                                { className: _style2.default.text },
+                                'These queries rank on position 8 to 20. Strengthening the content for them can lift the page onto the first result page.'
+                            ),
+                            this.renderHintQueries(strikingDistance)
+                        ),
+                        missingInText.length > 0 && _react2.default.createElement(
+                            'div',
+                            { className: _style2.default.inner },
+                            _react2.default.createElement(
+                                'b',
+                                { className: _style2.default.block },
+                                'Not in title or description'
+                            ),
+                            _react2.default.createElement(
+                                'span',
+                                { className: _style2.default.text },
+                                'People find this page with these queries, but title and meta description do not mention them.'
+                            ),
+                            this.renderHintQueries(missingInText)
+                        )
+                    )
+                ),
                 _react2.default.createElement('div', { className: _style2.default.hr }),
                 _react2.default.createElement(
                     _reactUiComponents.ToggablePanel,
@@ -1250,6 +1300,12 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
                             this.renderVerdict($get('indexStatusResult.verdict', data), $get('indexStatusResult.coverageState', data)),
                             this.renderVerdict($get('mobileUsabilityResult.verdict', data), 'Mobile Usability'),
                             this.renderVerdict($get('richResultsResult.verdict', data), 'Rich Results'),
+                            canonicalMismatch && _react2.default.createElement(
+                                'span',
+                                { className: _style2.default.block },
+                                _react2.default.createElement(_reactUiComponents.Icon, { icon: 'exclamation-triangle', color: 'warn', size: 'lg', padded: 'right' }),
+                                'Google uses a different canonical'
+                            ),
                             $get('indexStatusResult.lastCrawlTime', data) && _react2.default.createElement(
                                 'span',
                                 { className: _style2.default.block },
@@ -1259,14 +1315,14 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
                         )
                     )
                 ),
-                $get('indexStatusResult.verdict', data) === 'PASS' && _react2.default.createElement('div', { className: _style2.default.hr }),
-                $get('indexStatusResult.verdict', data) === 'PASS' && _react2.default.createElement(
+                (googleCanonical || userCanonical) && _react2.default.createElement('div', { className: _style2.default.hr }),
+                (googleCanonical || userCanonical) && _react2.default.createElement(
                     _reactUiComponents.ToggablePanel,
                     { style: 'condensed' },
                     _react2.default.createElement(
                         _reactUiComponents.ToggablePanel.Header,
                         { className: _style2.default.panelheader },
-                        _react2.default.createElement(_reactUiComponents.Icon, { icon: 'link', padded: 'right' }),
+                        _react2.default.createElement(_reactUiComponents.Icon, { icon: canonicalMismatch ? 'exclamation-triangle' : 'link', color: canonicalMismatch ? 'warn' : undefined, padded: 'right' }),
                         'Canonical'
                     ),
                     _react2.default.createElement(
@@ -1275,6 +1331,11 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
                         _react2.default.createElement(
                             'div',
                             { className: _style2.default.inner },
+                            canonicalMismatch && _react2.default.createElement(
+                                'span',
+                                { className: _style2.default.text },
+                                'Google ignores the canonical this page declares and indexes the URL below instead.'
+                            ),
                             $get('indexStatusResult.googleCanonical', data) && _react2.default.createElement(
                                 'div',
                                 null,
@@ -1394,6 +1455,62 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
             );
         }
     }, {
+        key: 'renderHintQueries',
+        value: function renderHintQueries(rows) {
+            return _react2.default.createElement(
+                'table',
+                { className: _style2.default.table },
+                _react2.default.createElement(
+                    'thead',
+                    null,
+                    _react2.default.createElement(
+                        'tr',
+                        null,
+                        _react2.default.createElement(
+                            'th',
+                            null,
+                            'Query'
+                        ),
+                        _react2.default.createElement(
+                            'th',
+                            { title: 'Impressions' },
+                            'Impr.'
+                        ),
+                        _react2.default.createElement(
+                            'th',
+                            { title: 'Position' },
+                            'Pos.'
+                        )
+                    )
+                ),
+                _react2.default.createElement(
+                    'tbody',
+                    null,
+                    rows.map(function (row) {
+                        return _react2.default.createElement(
+                            'tr',
+                            { key: row.query },
+                            _react2.default.createElement(
+                                'td',
+                                null,
+                                row.query
+                            ),
+                            _react2.default.createElement(
+                                'td',
+                                null,
+                                formatNumber(row.impressions)
+                            ),
+                            _react2.default.createElement(
+                                'td',
+                                null,
+                                formatPosition(row.position)
+                            )
+                        );
+                    })
+                )
+            );
+        }
+    }, {
         key: 'renderVerdict',
         value: function renderVerdict(verdict, label) {
             if (!verdict) {
@@ -1507,7 +1624,7 @@ exports.default = InspectorView;
 /***/ (function(module, exports, __webpack_require__) {
 
 // extracted by mini-css-extract-plugin
-module.exports = {"view":"style__view___EC1q2","viewbutton":"style__viewbutton___11-L6","inner":"style__inner___1OdkG","block":"style__block___2ZjJG","richitem":"style__richitem___3jT4G","panelheader":"style__panelheader___3u773","ReactCollapse--content":"style__ReactCollapse--content___m7Cpg","panelcontents":"style__panelcontents___iLkMH","hr":"style__hr___7Olvi","list":"style__list___3nmb3","link":"style__link___1i9jQ","table":"style__table___3duc5","better":"style__better___2adMS","worse":"style__worse___17Y9f"};
+module.exports = {"view":"style__view___EC1q2","viewbutton":"style__viewbutton___11-L6","inner":"style__inner___1OdkG","block":"style__block___2ZjJG","richitem":"style__richitem___3jT4G","panelheader":"style__panelheader___3u773","ReactCollapse--content":"style__ReactCollapse--content___m7Cpg","panelcontents":"style__panelcontents___iLkMH","hr":"style__hr___7Olvi","list":"style__list___3nmb3","link":"style__link___1i9jQ","table":"style__table___3duc5","better":"style__better___2adMS","worse":"style__worse___17Y9f","text":"style__text___1NJUR"};
 
 /***/ }),
 

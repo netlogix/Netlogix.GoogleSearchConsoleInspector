@@ -58,9 +58,15 @@ On document level nodes a new tab will be added in the left-hand inspector windo
 
 The first section offers a button leading directly to Googles own [URL Inspection Tool](https://support.google.com/webmasters/answer/9012289), preconfigured with the current page data.
 
+The "Refresh" button fetches current data from Google, bypassing the response cache (24 hours by default).
+
+"Search Performance" shows clicks, impressions, CTR and position of the page for the last 28 days compared to the 28 days before, plus its top queries, provided by the [Search Analytics API](https://developers.google.com/webmaster-tools/v1/searchanalytics/query).
+
+"Content Hints" lists queries with at least 10 impressions that rank on position 8 to 20, and queries whose words are missing from the `title`, `titleOverride` and `metaDescription` properties of the document.
+
 The second sections provides data about Google's [indexing status](https://support.google.com/webmasters/answer/9012289?hl=en#using_the_tool), [mobile usability](https://developers.google.com/search/mobile-sites/get-started) according to Google, [rich results]((https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data)) availability and the last time the site was crawled.
 
-The third section displays information about the current Google and user [canonicals](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls) used.
+The third section displays information about the current Google and user [canonicals](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls) used. A warning is shown if Google chose a different canonical than the page declares.
 
 The fourth section contains a list of Urls for which Google is aware of the current page is being referenced from.
 

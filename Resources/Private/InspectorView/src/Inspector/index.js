@@ -89,6 +89,11 @@ export default class InspectorView extends PureComponent {
     render() {
         const data = refreshed.get(this.props.focusedNodeContextPath) || this.props.data;
         const performance = $get('performance', data);
+        const strikingDistance = $get('performance.hints.strikingDistance', data) || [];
+        const missingInText = $get('performance.hints.missingInText', data) || [];
+        const googleCanonical = $get('indexStatusResult.googleCanonical', data);
+        const userCanonical = $get('indexStatusResult.userCanonical', data);
+        const canonicalMismatch = Boolean(googleCanonical && userCanonical && googleCanonical !== userCanonical);
 
         const referringUrls = $get('indexStatusResult.referringUrls', data);
         const richItems = $get('richResultsResult.detectedItems', data);
@@ -153,7 +158,7 @@ export default class InspectorView extends PureComponent {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {performance.queries.map(row => <tr key={row.query}>
+                                    {performance.queries.slice(0, 10).map(row => <tr key={row.query}>
                                         <td>{row.query}</td>
                                         <td>{formatNumber(row.clicks)}</td>
                                         <td>{formatNumber(row.impressions)}</td>
@@ -161,6 +166,27 @@ export default class InspectorView extends PureComponent {
                                     </tr>)}
                                 </tbody>
                             </table>
+                        </div>}
+                    </ToggablePanel.Contents>
+                </ToggablePanel>}
+
+                {(strikingDistance.length > 0 || missingInText.length > 0) && <div className={style.hr}></div>}
+
+                {(strikingDistance.length > 0 || missingInText.length > 0) && <ToggablePanel style="condensed">
+                    <ToggablePanel.Header className={style.panelheader}>
+                        <Icon icon="lightbulb" padded="right" />
+                        Content Hints
+                    </ToggablePanel.Header>
+                    <ToggablePanel.Contents className={style.panelcontents}>
+                        {strikingDistance.length > 0 && <div className={style.inner}>
+                            <b className={style.block}>Almost on page one</b>
+                            <span className={style.text}>These queries rank on position 8 to 20. Strengthening the content for them can lift the page onto the first result page.</span>
+                            {this.renderHintQueries(strikingDistance)}
+                        </div>}
+                        {missingInText.length > 0 && <div className={style.inner}>
+                            <b className={style.block}>Not in title or description</b>
+                            <span className={style.text}>People find this page with these queries, but title and meta description do not mention them.</span>
+                            {this.renderHintQueries(missingInText)}
                         </div>}
                     </ToggablePanel.Contents>
                 </ToggablePanel>}
@@ -177,6 +203,10 @@ export default class InspectorView extends PureComponent {
                             {this.renderVerdict($get('indexStatusResult.verdict', data), $get('indexStatusResult.coverageState', data))}
                             {this.renderVerdict($get('mobileUsabilityResult.verdict', data), 'Mobile Usability')}
                             {this.renderVerdict($get('richResultsResult.verdict', data), 'Rich Results')}
+                            {canonicalMismatch && <span className={style.block}>
+                                <Icon icon="exclamation-triangle" color="warn" size="lg" padded="right" />
+                                Google uses a different canonical
+                            </span>}
 
                             {$get('indexStatusResult.lastCrawlTime', data) && <span className={style.block}>
                                 Last crawl time &nbsp;
@@ -186,15 +216,19 @@ export default class InspectorView extends PureComponent {
                     </ToggablePanel.Contents>
                 </ToggablePanel>
 
-                {$get('indexStatusResult.verdict', data) === 'PASS' && <div className={style.hr}></div>}
+                {(googleCanonical || userCanonical) && <div className={style.hr}></div>}
 
-                {$get('indexStatusResult.verdict', data) === 'PASS' && <ToggablePanel style="condensed">
+                {(googleCanonical || userCanonical) && <ToggablePanel style="condensed">
                     <ToggablePanel.Header className={style.panelheader}>
-                        <Icon icon="link" padded="right" />
+                        <Icon icon={canonicalMismatch ? 'exclamation-triangle' : 'link'} color={canonicalMismatch ? 'warn' : undefined} padded="right" />
                         Canonical
                     </ToggablePanel.Header>
                     <ToggablePanel.Contents className={style.panelcontents}>
                         <div className={style.inner}>
+                            {canonicalMismatch && <span className={style.text}>
+                                Google ignores the canonical this page declares and indexes the URL below instead.
+                            </span>}
+
                             {$get('indexStatusResult.googleCanonical', data) && <div>
                                 <b className={style.block}>Google Canonical</b>
 
@@ -257,6 +291,25 @@ export default class InspectorView extends PureComponent {
                 {diff !== 0 && `${diff > 0 ? '+' : '-'}${format(Math.abs(diff))}`}
             </td>
         </tr>
+    }
+
+    renderHintQueries(rows) {
+        return <table className={style.table}>
+            <thead>
+                <tr>
+                    <th>Query</th>
+                    <th title="Impressions">Impr.</th>
+                    <th title="Position">Pos.</th>
+                </tr>
+            </thead>
+            <tbody>
+                {rows.map(row => <tr key={row.query}>
+                    <td>{row.query}</td>
+                    <td>{formatNumber(row.impressions)}</td>
+                    <td>{formatPosition(row.position)}</td>
+                </tr>)}
+            </tbody>
+        </table>
     }
 
     renderVerdict(verdict, label) {
