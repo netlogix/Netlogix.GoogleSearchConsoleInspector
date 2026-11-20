@@ -26,4 +26,9 @@ class GoogleSearchConsoleInspectorCommandController extends CommandController
         print_r(json_decode(json_encode($result->toSimpleObject()), true));
     }
 
+    public function performanceCommand(string $uri): void
+    {
+        print_r($this->inspectionService->pagePerformance(new Uri($uri), true));
+    }
+
 }

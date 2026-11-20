@@ -990,7 +990,7 @@ exports.default = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _dec, _class, _class2, _temp;
+var _dec, _class, _class2, _temp2;
 
 var _react = __webpack_require__(/*! react */ "./node_modules/@neos-project/neos-ui-extensibility/src/shims/vendor/react/index.js");
 
@@ -1026,13 +1026,59 @@ var $get = function $get(path, obj) {
     }, obj);
 };
 
-var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp = _class2 = function (_PureComponent) {
+// The host caches data source responses per node for the whole session,
+// so a refreshed response has to win over the cached one on revisits.
+var refreshed = new Map();
+
+var formatNumber = function formatNumber(value) {
+    return value == null ? '-' : value.toLocaleString();
+};
+var formatPercent = function formatPercent(value) {
+    return value == null ? '-' : (value * 100).toFixed(1) + ' %';
+};
+var formatPosition = function formatPosition(value) {
+    return value == null ? '-' : value.toFixed(1);
+};
+
+var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp2 = _class2 = function (_PureComponent) {
     _inherits(InspectorView, _PureComponent);
 
     function InspectorView() {
+        var _ref;
+
+        var _temp, _this, _ret;
+
         _classCallCheck(this, InspectorView);
 
-        return _possibleConstructorReturn(this, (InspectorView.__proto__ || Object.getPrototypeOf(InspectorView)).apply(this, arguments));
+        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+            args[_key] = arguments[_key];
+        }
+
+        return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = InspectorView.__proto__ || Object.getPrototypeOf(InspectorView)).call.apply(_ref, [this].concat(args))), _this), _this.state = {
+            refreshing: false,
+            error: null
+        }, _this.refresh = function () {
+            var _this$props = _this.props,
+                dataSourcesDataLoader = _this$props.dataSourcesDataLoader,
+                focusedNodeContextPath = _this$props.focusedNodeContextPath,
+                options = _this$props.options;
+
+
+            _this.setState({ refreshing: true, error: null });
+            dataSourcesDataLoader.resolveValue({
+                contextNodePath: focusedNodeContextPath,
+                dataSourceIdentifier: options.dataSource,
+                // the timestamp bypasses the host's response cache
+                dataSourceAdditionalData: { node: focusedNodeContextPath, force: Date.now() }
+            }).then(function (response) {
+                if (response.data) {
+                    refreshed.set(focusedNodeContextPath, response.data);
+                }
+                _this.setState({ refreshing: false, error: response.error ? response.error.message : null });
+            }).catch(function (error) {
+                return _this.setState({ refreshing: false, error: error.message });
+            });
+        }, _temp), _possibleConstructorReturn(_this, _ret);
     }
 
     _createClass(InspectorView, [{
@@ -1040,8 +1086,8 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
         value: function render() {
             var _this2 = this;
 
-            var data = this.props.data;
-
+            var data = refreshed.get(this.props.focusedNodeContextPath) || this.props.data;
+            var performance = $get('performance', data);
 
             var referringUrls = $get('indexStatusResult.referringUrls', data);
             var richItems = $get('richResultsResult.detectedItems', data);
@@ -1061,6 +1107,129 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
                     },
                     _react2.default.createElement(_reactUiComponents.Icon, { icon: 'share', padded: 'right' }),
                     'View in Google Search Console'
+                ),
+                _react2.default.createElement(
+                    _reactUiComponents.Button,
+                    {
+                        className: _style2.default.viewbutton,
+                        style: 'lighter',
+                        title: 'Fetch current data from Google',
+                        disabled: this.state.refreshing,
+                        onClick: this.refresh
+                    },
+                    _react2.default.createElement(_reactUiComponents.Icon, { icon: 'sync', spin: this.state.refreshing, padded: 'right' }),
+                    'Refresh'
+                ),
+                this.state.error && _react2.default.createElement(
+                    'div',
+                    { className: _style2.default.inner },
+                    _react2.default.createElement(_reactUiComponents.Icon, { icon: 'exclamation-triangle', color: 'error', padded: 'right' }),
+                    this.state.error
+                ),
+                performance && _react2.default.createElement('div', { className: _style2.default.hr }),
+                performance && _react2.default.createElement(
+                    _reactUiComponents.ToggablePanel,
+                    { style: 'condensed' },
+                    _react2.default.createElement(
+                        _reactUiComponents.ToggablePanel.Header,
+                        { className: _style2.default.panelheader },
+                        _react2.default.createElement(_reactUiComponents.Icon, { icon: 'chart-line', padded: 'right' }),
+                        'Search Performance'
+                    ),
+                    _react2.default.createElement(
+                        _reactUiComponents.ToggablePanel.Contents,
+                        { className: _style2.default.panelcontents },
+                        _react2.default.createElement(
+                            'div',
+                            { className: _style2.default.inner },
+                            _react2.default.createElement(
+                                'span',
+                                { className: _style2.default.block },
+                                performance.startDate,
+                                ' to ',
+                                performance.endDate,
+                                ', compared to the 28 days before'
+                            ),
+                            _react2.default.createElement(
+                                'table',
+                                { className: _style2.default.table },
+                                _react2.default.createElement(
+                                    'tbody',
+                                    null,
+                                    this.renderMetric('Clicks', 'clicks', formatNumber, performance),
+                                    this.renderMetric('Impressions', 'impressions', formatNumber, performance),
+                                    this.renderMetric('CTR', 'ctr', formatPercent, performance),
+                                    this.renderMetric('Position', 'position', formatPosition, performance, true)
+                                )
+                            )
+                        ),
+                        performance.queries.length > 0 && _react2.default.createElement(
+                            'div',
+                            { className: _style2.default.inner },
+                            _react2.default.createElement(
+                                'table',
+                                { className: _style2.default.table },
+                                _react2.default.createElement(
+                                    'thead',
+                                    null,
+                                    _react2.default.createElement(
+                                        'tr',
+                                        null,
+                                        _react2.default.createElement(
+                                            'th',
+                                            null,
+                                            'Top queries'
+                                        ),
+                                        _react2.default.createElement(
+                                            'th',
+                                            { title: 'Clicks' },
+                                            'Cl.'
+                                        ),
+                                        _react2.default.createElement(
+                                            'th',
+                                            { title: 'Impressions' },
+                                            'Impr.'
+                                        ),
+                                        _react2.default.createElement(
+                                            'th',
+                                            { title: 'Position' },
+                                            'Pos.'
+                                        )
+                                    )
+                                ),
+                                _react2.default.createElement(
+                                    'tbody',
+                                    null,
+                                    performance.queries.map(function (row) {
+                                        return _react2.default.createElement(
+                                            'tr',
+                                            { key: row.query },
+                                            _react2.default.createElement(
+                                                'td',
+                                                null,
+                                                row.query
+                                            ),
+                                            _react2.default.createElement(
+                                                'td',
+                                                null,
+                                                formatNumber(row.clicks)
+                                            ),
+                                            _react2.default.createElement(
+                                                'td',
+                                                null,
+                                                formatNumber(row.impressions)
+                                            ),
+                                            _react2.default.createElement(
+                                                'td',
+                                                null,
+                                                formatPosition(row.position)
+                                            )
+                                        );
+                                    })
+                                )
+                            )
+                        )
+                    )
                 ),
                 _react2.default.createElement('div', { className: _style2.default.hr }),
                 _react2.default.createElement(
@@ -1195,6 +1364,36 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
             );
         }
     }, {
+        key: 'renderMetric',
+        value: function renderMetric(label, key, format, performance) {
+            var lowerIsBetter = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : false;
+
+            var current = performance.current[key];
+            var previous = performance.previous[key];
+            var diff = current == null || previous == null ? 0 : current - previous;
+            var improved = lowerIsBetter ? diff < 0 : diff > 0;
+
+            return _react2.default.createElement(
+                'tr',
+                null,
+                _react2.default.createElement(
+                    'td',
+                    null,
+                    label
+                ),
+                _react2.default.createElement(
+                    'td',
+                    null,
+                    format(current)
+                ),
+                _react2.default.createElement(
+                    'td',
+                    { className: diff === 0 ? '' : improved ? _style2.default.better : _style2.default.worse, title: 'Before: ' + format(previous) },
+                    diff !== 0 && '' + (diff > 0 ? '+' : '-') + format(Math.abs(diff))
+                )
+            );
+        }
+    }, {
         key: 'renderVerdict',
         value: function renderVerdict(verdict, label) {
             if (!verdict) {
@@ -1270,6 +1469,13 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
                 "userCanonical": _propTypes2.default.string,
                 "verdict": _propTypes2.default.string
             }),
+            "performance": _propTypes2.default.shape({
+                "startDate": _propTypes2.default.string,
+                "endDate": _propTypes2.default.string,
+                "current": _propTypes2.default.object,
+                "previous": _propTypes2.default.object,
+                "queries": _propTypes2.default.array
+            }),
             "mobileUsabilityResult": _propTypes2.default.shape({
                 "verdict": _propTypes2.default.string
             }),
@@ -1288,7 +1494,7 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
         collection: _propTypes2.default.string,
         columns: _propTypes2.default.array
     }).isRequired
-}, _temp)) || _class);
+}, _temp2)) || _class);
 exports.default = InspectorView;
 
 /***/ }),
@@ -1301,7 +1507,7 @@ exports.default = InspectorView;
 /***/ (function(module, exports, __webpack_require__) {
 
 // extracted by mini-css-extract-plugin
-module.exports = {"view":"style__view___EC1q2","viewbutton":"style__viewbutton___11-L6","inner":"style__inner___1OdkG","block":"style__block___2ZjJG","richitem":"style__richitem___3jT4G","panelheader":"style__panelheader___3u773","ReactCollapse--content":"style__ReactCollapse--content___m7Cpg","panelcontents":"style__panelcontents___iLkMH","hr":"style__hr___7Olvi","list":"style__list___3nmb3","link":"style__link___1i9jQ"};
+module.exports = {"view":"style__view___EC1q2","viewbutton":"style__viewbutton___11-L6","inner":"style__inner___1OdkG","block":"style__block___2ZjJG","richitem":"style__richitem___3jT4G","panelheader":"style__panelheader___3u773","ReactCollapse--content":"style__ReactCollapse--content___m7Cpg","panelcontents":"style__panelcontents___iLkMH","hr":"style__hr___7Olvi","list":"style__list___3nmb3","link":"style__link___1i9jQ","table":"style__table___3duc5","better":"style__better___2adMS","worse":"style__worse___17Y9f"};
 
 /***/ }),
 

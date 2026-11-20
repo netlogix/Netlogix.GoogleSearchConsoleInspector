@@ -56,10 +56,13 @@ final class InspectionDataSource extends AbstractDataSource
                 ];
             }
 
-            $result = $this->inspectionService->inspectUri($uri);
+            $force = !empty($arguments['force']);
+            $result = $this->inspectionService->inspectUri($uri, $force);
 
             return [
-                'data' => json_decode(json_encode($result->toSimpleObject()), true),
+                'data' => json_decode(json_encode($result->toSimpleObject()), true) + [
+                    'performance' => $this->inspectionService->pagePerformance($uri, $force),
+                ],
             ];
         } catch (\Throwable $t) {
             return [

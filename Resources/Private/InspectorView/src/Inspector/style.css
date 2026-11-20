@@ -77,3 +77,30 @@
     color: #00ADEE;
     text-decoration: underline;
 }
+
+.table {
+    width: 100%;
+    word-break: normal;
+}
+
+.table th {
+    text-align: left;
+    font-weight: bold;
+}
+
+.table td, .table th {
+    padding: .15rem .5rem .15rem 0;
+}
+
+.table td + td, .table th + th {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.better {
+    color: #00a338;
+}
+
+.worse {
+    color: #ff460d;
+}

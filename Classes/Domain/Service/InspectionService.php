@@ -57,6 +57,90 @@ final class InspectionService extends SearchConsole
     }
 
     /**
+     * Search performance of a single page for the last 28 days, compared to the 28 days before.
+     *
+     * @return array{startDate: string, endDate: string, current: array, previous: array, queries: array}
+     */
+    public function pagePerformance(Uri $uri, bool $force = false): array
+    {
+        $cacheIdentifier = sha1('performance' . $uri);
+        if ($this->cache->has($cacheIdentifier) && !$force) {
+            return $this->cache->get($cacheIdentifier);
+        }
+
+        [$siteUrl, $pageUri] = $this->resolveSiteUrlAndInspectionUri($uri);
+
+        // Search Console data lags two to three days behind
+        $end = new \DateTimeImmutable('-3 days');
+        $start = $end->modify('-27 days');
+        $previousStart = $start->modify('-28 days');
+
+        $sums = array_fill_keys(['current', 'previous'], ['clicks' => 0, 'impressions' => 0, 'position' => 0.0]);
+        foreach ($this->queryPage($siteUrl, $pageUri, 'date', $previousStart, $end, 56) as $row) {
+            $period = $row->getKeys()[0] >= $start->format('Y-m-d') ? 'current' : 'previous';
+            $sums[$period]['clicks'] += (int)$row->getClicks();
+            $sums[$period]['impressions'] += (int)$row->getImpressions();
+            $sums[$period]['position'] += $row->getPosition() * $row->getImpressions();
+        }
+
+        $totals = array_map(static fn (array $sum) => [
+            'clicks' => $sum['clicks'],
+            'impressions' => $sum['impressions'],
+            'ctr' => $sum['impressions'] > 0 ? $sum['clicks'] / $sum['impressions'] : null,
+            'position' => $sum['impressions'] > 0 ? $sum['position'] / $sum['impressions'] : null,
+        ], $sums);
+
+        $queries = array_map(static fn (SearchConsole\ApiDataRow $row) => [
+            'query' => $row->getKeys()[0],
+            'clicks' => (int)$row->getClicks(),
+            'impressions' => (int)$row->getImpressions(),
+            'position' => $row->getPosition(),
+        ], $this->queryPage($siteUrl, $pageUri, 'query', $start, $end, 10));
+
+        // the API only sorts by clicks, which leaves the many zero-click queries unordered
+        usort($queries, static fn (array $a, array $b) => [$b['clicks'], $b['impressions']] <=> [$a['clicks'], $a['impressions']]);
+
+        $result = [
+            'startDate' => $start->format('Y-m-d'),
+            'endDate' => $end->format('Y-m-d'),
+            'current' => $totals['current'],
+            'previous' => $totals['previous'],
+            'queries' => $queries,
+        ];
+        $this->cache->set($cacheIdentifier, $result, [sha1($siteUrl)]);
+
+        return $result;
+    }
+
+    /**
+     * @return SearchConsole\ApiDataRow[]
+     */
+    private function queryPage(
+        string $siteUrl,
+        Uri $pageUri,
+        string $dimension,
+        \DateTimeImmutable $start,
+        \DateTimeImmutable $end,
+        int $rowLimit
+    ): array {
+        $filter = new SearchConsole\ApiDimensionFilter();
+        $filter->setDimension('page');
+        $filter->setOperator('equals');
+        $filter->setExpression((string)$pageUri);
+        $filterGroup = new SearchConsole\ApiDimensionFilterGroup();
+        $filterGroup->setFilters([$filter]);
+
+        $request = new SearchConsole\SearchAnalyticsQueryRequest();
+        $request->setStartDate($start->format('Y-m-d'));
+        $request->setEndDate($end->format('Y-m-d'));
+        $request->setDimensions([$dimension]);
+        $request->setDimensionFilterGroups([$filterGroup]);
+        $request->setRowLimit($rowLimit);
+
+        return $this->searchanalytics->query($siteUrl, $request)->getRows() ?? [];
+    }
+
+    /**
      * Resolves the Search Console property for the given URI and rewrites the URI onto the
      * property's canonical (first-listed) URL prefix. Additional prefixes (e.g. a local dev
      * domain) are only used to recognize which property a URL belongs to - the Search Console

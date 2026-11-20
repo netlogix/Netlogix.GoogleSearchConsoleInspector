@@ -78,5 +78,32 @@
     text-decoration: underline;
 }
 
+.style__table___3duc5 {
+    width: 100%;
+    word-break: normal;
+}
+
+.style__table___3duc5 th {
+    text-align: left;
+    font-weight: bold;
+}
+
+.style__table___3duc5 td, .style__table___3duc5 th {
+    padding: .15rem .5rem .15rem 0;
+}
+
+.style__table___3duc5 td + td, .style__table___3duc5 th + th {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.style__better___2adMS {
+    color: #00a338;
+}
+
+.style__worse___17Y9f {
+    color: #ff460d;
+}
+
 
 /*# sourceMappingURL=Plugin.css.map*/
