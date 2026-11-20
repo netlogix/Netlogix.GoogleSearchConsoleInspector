@@ -1298,7 +1298,6 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
                             'div',
                             { className: _style2.default.inner },
                             this.renderVerdict($get('indexStatusResult.verdict', data), $get('indexStatusResult.coverageState', data)),
-                            this.renderVerdict($get('mobileUsabilityResult.verdict', data), 'Mobile Usability'),
                             this.renderVerdict($get('richResultsResult.verdict', data), 'Rich Results'),
                             canonicalMismatch && _react2.default.createElement(
                                 'span',
@@ -1592,9 +1591,6 @@ var InspectorView = (_dec = (0, _neosUiViews.dataLoader)(), _dec(_class = (_temp
                 "current": _propTypes2.default.object,
                 "previous": _propTypes2.default.object,
                 "queries": _propTypes2.default.array
-            }),
-            "mobileUsabilityResult": _propTypes2.default.shape({
-                "verdict": _propTypes2.default.string
             }),
             "richResultsResult": _propTypes2.default.shape({
                 "verdict": _propTypes2.default.string,

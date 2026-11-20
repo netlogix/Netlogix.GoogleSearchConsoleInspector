@@ -1,0 +1,11 @@
+Neos:
+  Neos:
+    modules:
+      management:
+        submodules:
+          nlxGoogleSearchConsole:
+            label: 'Search Console'
+            description: 'Search performance, sitemaps and indexing status from Google Search Console'
+            icon: 'fas fa-search'
+            controller: 'Netlogix\GoogleSearchConsoleInspector\Controller\Module\SearchConsoleController'
+            privilegeTarget: 'Netlogix.GoogleSearchConsoleInspector:Module'

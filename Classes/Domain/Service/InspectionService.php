@@ -75,13 +75,11 @@ final class InspectionService extends SearchConsole
 
         [$siteUrl, $pageUri] = $this->resolveSiteUrlAndInspectionUri($uri);
 
-        // Search Console data lags two to three days behind
-        $end = new \DateTimeImmutable('-3 days');
-        $start = $end->modify('-27 days');
+        [$start, $end] = self::period();
         $previousStart = $start->modify('-28 days');
 
         $sums = array_fill_keys(['current', 'previous'], ['clicks' => 0, 'impressions' => 0, 'position' => 0.0]);
-        foreach ($this->queryPage($siteUrl, $pageUri, 'date', $previousStart, $end, 56) as $row) {
+        foreach ($this->query($siteUrl, 'date', $previousStart, $end, 56, $pageUri) as $row) {
             $period = $row->getKeys()[0] >= $start->format('Y-m-d') ? 'current' : 'previous';
             $sums[$period]['clicks'] += (int)$row->getClicks();
             $sums[$period]['impressions'] += (int)$row->getImpressions();
@@ -100,7 +98,7 @@ final class InspectionService extends SearchConsole
             'clicks' => (int)$row->getClicks(),
             'impressions' => (int)$row->getImpressions(),
             'position' => $row->getPosition(),
-        ], $this->queryPage($siteUrl, $pageUri, 'query', $start, $end, 50));
+        ], $this->query($siteUrl, 'query', $start, $end, 50, $pageUri));
 
         // the API only sorts by clicks, which leaves the many zero-click queries unordered
         usort($queries, static fn (array $a, array $b) => [$b['clicks'], $b['impressions']] <=> [$a['clicks'], $a['impressions']]);
@@ -149,29 +147,44 @@ final class InspectionService extends SearchConsole
     }
 
     /**
+     * The last 28 days Search Console has data for
+     *
+     * @return array{0: \DateTimeImmutable, 1: \DateTimeImmutable}
+     */
+    public static function period(): array
+    {
+        // Search Console data lags two to three days behind
+        $end = new \DateTimeImmutable('-3 days');
+
+        return [$end->modify('-27 days'), $end];
+    }
+
+    /**
      * @return SearchConsole\ApiDataRow[]
      */
-    private function queryPage(
+    public function query(
         string $siteUrl,
-        Uri $pageUri,
         string $dimension,
         \DateTimeImmutable $start,
         \DateTimeImmutable $end,
-        int $rowLimit
+        int $rowLimit,
+        ?Uri $pageUri = null
     ): array {
-        $filter = new SearchConsole\ApiDimensionFilter();
-        $filter->setDimension('page');
-        $filter->setOperator('equals');
-        $filter->setExpression((string)$pageUri);
-        $filterGroup = new SearchConsole\ApiDimensionFilterGroup();
-        $filterGroup->setFilters([$filter]);
-
         $request = new SearchConsole\SearchAnalyticsQueryRequest();
         $request->setStartDate($start->format('Y-m-d'));
         $request->setEndDate($end->format('Y-m-d'));
         $request->setDimensions([$dimension]);
-        $request->setDimensionFilterGroups([$filterGroup]);
         $request->setRowLimit($rowLimit);
+
+        if ($pageUri !== null) {
+            $filter = new SearchConsole\ApiDimensionFilter();
+            $filter->setDimension('page');
+            $filter->setOperator('equals');
+            $filter->setExpression((string)$pageUri);
+            $filterGroup = new SearchConsole\ApiDimensionFilterGroup();
+            $filterGroup->setFilters([$filter]);
+            $request->setDimensionFilterGroups([$filterGroup]);
+        }
 
         return $this->searchanalytics->query($siteUrl, $request)->getRows() ?? [];
     }

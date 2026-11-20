@@ -3,3 +3,11 @@ Netlogix_GoogleSearchConsoleInspector_Responses:
   backend: Neos\Cache\Backend\FileBackend
   backendOptions:
     defaultLifetime: 86400
+
+# Results of googlesearchconsoleinspector:inspectsitemaps, kept until the next run
+Netlogix_GoogleSearchConsoleInspector_Reports:
+  frontend: Neos\Cache\Frontend\VariableFrontend
+  backend: Neos\Cache\Backend\FileBackend
+  persistent: true
+  backendOptions:
+    defaultLifetime: 0

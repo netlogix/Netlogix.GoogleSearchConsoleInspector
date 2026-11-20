@@ -1,0 +1,11 @@
+privilegeTargets:
+  'Neos\Flow\Security\Authorization\Privilege\Method\MethodPrivilege':
+    'Netlogix.GoogleSearchConsoleInspector:Module':
+      matcher: 'method(Netlogix\GoogleSearchConsoleInspector\Controller\Module\SearchConsoleController->(index)Action())'
+
+roles:
+  # The module shows data of all configured properties, so it is not granted to editors by default
+  'Neos.Neos:Administrator':
+    privileges:
+      - privilegeTarget: 'Netlogix.GoogleSearchConsoleInspector:Module'
+        permission: GRANT

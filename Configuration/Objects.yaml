@@ -16,3 +16,20 @@ Netlogix\GoogleSearchConsoleInspector\Domain\Service\InspectionService:
         arguments:
           1:
             value: Netlogix_GoogleSearchConsoleInspector_Responses
+
+Netlogix\GoogleSearchConsoleInspector\Domain\Service\SiteReportService:
+  properties:
+    responseCache:
+      object:
+        factoryObjectName: Neos\Flow\Cache\CacheManager
+        factoryMethodName: getCache
+        arguments:
+          1:
+            value: Netlogix_GoogleSearchConsoleInspector_Responses
+    reportCache:
+      object:
+        factoryObjectName: Neos\Flow\Cache\CacheManager
+        factoryMethodName: getCache
+        arguments:
+          1:
+            value: Netlogix_GoogleSearchConsoleInspector_Reports

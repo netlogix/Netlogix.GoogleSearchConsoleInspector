@@ -44,9 +44,6 @@ export default class InspectorView extends PureComponent {
                     "previous": PropTypes.object,
                     "queries": PropTypes.array
                 }),
-                "mobileUsabilityResult": PropTypes.shape({
-                    "verdict": PropTypes.string
-                }),
                 "richResultsResult": PropTypes.shape({
                     "verdict": PropTypes.string,
                     "detectedItems": PropTypes.arrayOf(PropTypes.shape({
@@ -201,7 +198,6 @@ export default class InspectorView extends PureComponent {
                     <ToggablePanel.Contents className={style.panelcontents}>
                         <div className={style.inner}>
                             {this.renderVerdict($get('indexStatusResult.verdict', data), $get('indexStatusResult.coverageState', data))}
-                            {this.renderVerdict($get('mobileUsabilityResult.verdict', data), 'Mobile Usability')}
                             {this.renderVerdict($get('richResultsResult.verdict', data), 'Rich Results')}
                             {canonicalMismatch && <span className={style.block}>
                                 <Icon icon="exclamation-triangle" color="warn" size="lg" padded="right" />
