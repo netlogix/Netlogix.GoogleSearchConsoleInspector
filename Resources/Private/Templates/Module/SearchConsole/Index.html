@@ -1,0 +1,136 @@
+{namespace neos=Neos\Neos\ViewHelpers}
+<f:if condition="{property}">
+    <f:else>
+        <p>No Search Console property is configured at <code>Netlogix.GoogleSearchConsoleInspector.siteUrlMapping</code>.</p>
+    </f:else>
+    <f:then>
+        <div class="neos-row-fluid">
+            <f:for each="{properties}" as="item">
+                <f:link.action action="index" arguments="{property: item}" class="neos-button {f:if(condition: '{item} == {property}', then: 'neos-button-primary')}">{item}</f:link.action>
+            </f:for>
+        </div>
+
+        <f:if condition="{error}">
+            <div class="neos-row-fluid">
+                <p><i class="fas fa-exclamation-triangle"></i> {error}</p>
+            </div>
+        </f:if>
+
+        <f:if condition="{overview}">
+            <div class="neos-row-fluid">
+                <legend>Top pages, {overview.startDate} to {overview.endDate}</legend>
+                <f:render section="performance" arguments="{rows: overview.pages, label: 'Page'}" />
+            </div>
+
+            <div class="neos-row-fluid">
+                <legend>Top queries, {overview.startDate} to {overview.endDate}</legend>
+                <f:render section="performance" arguments="{rows: overview.queries, label: 'Query'}" />
+            </div>
+
+            <div class="neos-row-fluid">
+                <legend>Sitemaps</legend>
+                <f:if condition="{overview.sitemaps}">
+                    <f:else><p>No sitemap is submitted for this property.</p></f:else>
+                    <f:then>
+                        <table class="neos-table">
+                            <thead>
+                                <tr>
+                                    <th>Sitemap</th>
+                                    <th>Last downloaded</th>
+                                    <th>Submitted URLs</th>
+                                    <th>Errors</th>
+                                    <th>Warnings</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <f:for each="{overview.sitemaps}" as="sitemap">
+                                    <tr>
+                                        <td>{sitemap.path}</td>
+                                        <td>
+                                            <f:if condition="{sitemap.isPending}">
+                                                <f:then>pending</f:then>
+                                                <f:else><f:if condition="{sitemap.lastDownloaded}"><f:format.date format="Y-m-d H:i">{sitemap.lastDownloaded}</f:format.date> UTC</f:if></f:else>
+                                            </f:if>
+                                        </td>
+                                        <td>{sitemap.submitted}</td>
+                                        <td>{sitemap.errors}</td>
+                                        <td>{sitemap.warnings}</td>
+                                    </tr>
+                                </f:for>
+                            </tbody>
+                        </table>
+                    </f:then>
+                </f:if>
+            </div>
+        </f:if>
+
+        <div class="neos-row-fluid">
+            <legend>Pages that are not indexed</legend>
+            <f:if condition="{report}">
+                <f:else>
+                    <p>No report yet. Run <code>./flow googlesearchconsoleinspector:inspectsitemaps</code>, ideally as a daily cron job.</p>
+                </f:else>
+                <f:then>
+                    <p>
+                        {report.inspected} sitemap URLs inspected on <f:format.date format="Y-m-d H:i">@{report.generatedAt}</f:format.date> UTC<f:if condition="{report.errors}">, {report.errors} could not be inspected</f:if>.
+                    </p>
+                    <f:if condition="{report.notIndexed}">
+                        <f:else><p><i class="fas fa-check"></i> All of them are indexed.</p></f:else>
+                        <f:then>
+                            <table class="neos-table">
+                                <thead>
+                                    <tr>
+                                        <th>Page</th>
+                                        <th>Status</th>
+                                        <th>Last crawl</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <f:for each="{report.notIndexed}" as="page">
+                                        <tr>
+                                            <td>{page.url}</td>
+                                            <td>{page.coverageState}</td>
+                                            <td><f:if condition="{page.lastCrawlTime}"><f:format.date format="Y-m-d H:i">{page.lastCrawlTime}</f:format.date> UTC</f:if></td>
+                                            <td><a href="{page.inspectionResultLink}" target="_blank" rel="noopener">Open in Search Console</a></td>
+                                        </tr>
+                                    </f:for>
+                                </tbody>
+                            </table>
+                        </f:then>
+                    </f:if>
+                </f:then>
+            </f:if>
+        </div>
+    </f:then>
+</f:if>
+
+<f:section name="performance">
+    <f:if condition="{rows}">
+        <f:else><p>No data.</p></f:else>
+        <f:then>
+            <table class="neos-table">
+                <thead>
+                    <tr>
+                        <th>{label}</th>
+                        <th>Clicks</th>
+                        <th>Impressions</th>
+                        <th>CTR</th>
+                        <th>Position</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <f:for each="{rows}" as="row">
+                        <tr>
+                            <td>{row.key}</td>
+                            <td>{row.clicks}</td>
+                            <td>{row.impressions}</td>
+                            <td><f:format.number decimals="1">{row.ctr}</f:format.number> %</td>
+                            <td><f:format.number decimals="1">{row.position}</f:format.number></td>
+                        </tr>
+                    </f:for>
+                </tbody>
+            </table>
+        </f:then>
+    </f:if>
+</f:section>

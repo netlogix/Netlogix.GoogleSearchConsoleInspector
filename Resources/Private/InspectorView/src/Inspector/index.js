@@ -10,6 +10,14 @@ import { Button, Icon, ToggablePanel } from "@neos-project/react-ui-components";
 // replacement for the handful of $get(path, obj) calls below instead.
 const $get = (path, obj) => path.split('.').reduce((acc, key) => (acc == null ? undefined : acc[key]), obj);
 
+// The host caches data source responses per node for the whole session,
+// so a refreshed response has to win over the cached one on revisits.
+const refreshed = new Map();
+
+const formatNumber = value => value == null ? '-' : value.toLocaleString();
+const formatPercent = value => value == null ? '-' : `${(value * 100).toFixed(1)} %`;
+const formatPosition = value => value == null ? '-' : value.toFixed(1);
+
 @dataLoader()
 export default class InspectorView extends PureComponent {
     static propTypes = {
@@ -29,8 +37,12 @@ export default class InspectorView extends PureComponent {
                     "userCanonical": PropTypes.string,
                     "verdict": PropTypes.string
                 }),
-                "mobileUsabilityResult": PropTypes.shape({
-                    "verdict": PropTypes.string
+                "performance": PropTypes.shape({
+                    "startDate": PropTypes.string,
+                    "endDate": PropTypes.string,
+                    "current": PropTypes.object,
+                    "previous": PropTypes.object,
+                    "queries": PropTypes.array
                 }),
                 "richResultsResult": PropTypes.shape({
                     "verdict": PropTypes.string,
@@ -49,8 +61,36 @@ export default class InspectorView extends PureComponent {
         }).isRequired
     };
 
+    state = {
+        refreshing: false,
+        error: null
+    };
+
+    refresh = () => {
+        const { dataSourcesDataLoader, focusedNodeContextPath, options } = this.props;
+
+        this.setState({ refreshing: true, error: null });
+        dataSourcesDataLoader.resolveValue({
+            contextNodePath: focusedNodeContextPath,
+            dataSourceIdentifier: options.dataSource,
+            // the timestamp bypasses the host's response cache
+            dataSourceAdditionalData: { node: focusedNodeContextPath, force: Date.now() }
+        }).then(response => {
+            if (response.data) {
+                refreshed.set(focusedNodeContextPath, response.data);
+            }
+            this.setState({ refreshing: false, error: response.error ? response.error.message : null });
+        }).catch(error => this.setState({ refreshing: false, error: error.message }));
+    };
+
     render() {
-        const { data } = this.props;
+        const data = refreshed.get(this.props.focusedNodeContextPath) || this.props.data;
+        const performance = $get('performance', data);
+        const strikingDistance = $get('performance.hints.strikingDistance', data) || [];
+        const missingInText = $get('performance.hints.missingInText', data) || [];
+        const googleCanonical = $get('indexStatusResult.googleCanonical', data);
+        const userCanonical = $get('indexStatusResult.userCanonical', data);
+        const canonicalMismatch = Boolean(googleCanonical && userCanonical && googleCanonical !== userCanonical);
 
         const referringUrls = $get('indexStatusResult.referringUrls', data);
         const richItems = $get('richResultsResult.detectedItems', data);
@@ -67,6 +107,87 @@ export default class InspectorView extends PureComponent {
                     View in Google Search Console
                 </Button>
 
+                <Button
+                    className={style.viewbutton}
+                    style="lighter"
+                    title="Fetch current data from Google"
+                    disabled={this.state.refreshing}
+                    onClick={this.refresh}
+                >
+                    <Icon icon="sync" spin={this.state.refreshing} padded="right" />
+                    Refresh
+                </Button>
+
+                {this.state.error && <div className={style.inner}>
+                    <Icon icon="exclamation-triangle" color="error" padded="right" />
+                    {this.state.error}
+                </div>}
+
+                {performance && <div className={style.hr}></div>}
+
+                {performance && <ToggablePanel style="condensed">
+                    <ToggablePanel.Header className={style.panelheader}>
+                        <Icon icon="chart-line" padded="right" />
+                        Search Performance
+                    </ToggablePanel.Header>
+                    <ToggablePanel.Contents className={style.panelcontents}>
+                        <div className={style.inner}>
+                            <span className={style.block}>
+                                {performance.startDate} to {performance.endDate}, compared to the 28 days before
+                            </span>
+                            <table className={style.table}>
+                                <tbody>
+                                    {this.renderMetric('Clicks', 'clicks', formatNumber, performance)}
+                                    {this.renderMetric('Impressions', 'impressions', formatNumber, performance)}
+                                    {this.renderMetric('CTR', 'ctr', formatPercent, performance)}
+                                    {this.renderMetric('Position', 'position', formatPosition, performance, true)}
+                                </tbody>
+                            </table>
+                        </div>
+                        {performance.queries.length > 0 && <div className={style.inner}>
+                            <table className={style.table}>
+                                <thead>
+                                    <tr>
+                                        <th>Top queries</th>
+                                        <th title="Clicks">Cl.</th>
+                                        <th title="Impressions">Impr.</th>
+                                        <th title="Position">Pos.</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {performance.queries.slice(0, 10).map(row => <tr key={row.query}>
+                                        <td>{row.query}</td>
+                                        <td>{formatNumber(row.clicks)}</td>
+                                        <td>{formatNumber(row.impressions)}</td>
+                                        <td>{formatPosition(row.position)}</td>
+                                    </tr>)}
+                                </tbody>
+                            </table>
+                        </div>}
+                    </ToggablePanel.Contents>
+                </ToggablePanel>}
+
+                {(strikingDistance.length > 0 || missingInText.length > 0) && <div className={style.hr}></div>}
+
+                {(strikingDistance.length > 0 || missingInText.length > 0) && <ToggablePanel style="condensed">
+                    <ToggablePanel.Header className={style.panelheader}>
+                        <Icon icon="lightbulb" padded="right" />
+                        Content Hints
+                    </ToggablePanel.Header>
+                    <ToggablePanel.Contents className={style.panelcontents}>
+                        {strikingDistance.length > 0 && <div className={style.inner}>
+                            <b className={style.block}>Almost on page one</b>
+                            <span className={style.text}>These queries rank on position 8 to 20. Strengthening the content for them can lift the page onto the first result page.</span>
+                            {this.renderHintQueries(strikingDistance)}
+                        </div>}
+                        {missingInText.length > 0 && <div className={style.inner}>
+                            <b className={style.block}>Not in title or description</b>
+                            <span className={style.text}>People find this page with these queries, but title and meta description do not mention them.</span>
+                            {this.renderHintQueries(missingInText)}
+                        </div>}
+                    </ToggablePanel.Contents>
+                </ToggablePanel>}
+
                 <div className={style.hr}></div>
 
                 <ToggablePanel style="condensed">
@@ -77,8 +198,11 @@ export default class InspectorView extends PureComponent {
                     <ToggablePanel.Contents className={style.panelcontents}>
                         <div className={style.inner}>
                             {this.renderVerdict($get('indexStatusResult.verdict', data), $get('indexStatusResult.coverageState', data))}
-                            {this.renderVerdict($get('mobileUsabilityResult.verdict', data), 'Mobile Usability')}
                             {this.renderVerdict($get('richResultsResult.verdict', data), 'Rich Results')}
+                            {canonicalMismatch && <span className={style.block}>
+                                <Icon icon="exclamation-triangle" color="warn" size="lg" padded="right" />
+                                Google uses a different canonical
+                            </span>}
 
                             {$get('indexStatusResult.lastCrawlTime', data) && <span className={style.block}>
                                 Last crawl time &nbsp;
@@ -88,15 +212,19 @@ export default class InspectorView extends PureComponent {
                     </ToggablePanel.Contents>
                 </ToggablePanel>
 
-                {$get('indexStatusResult.verdict', data) === 'PASS' && <div className={style.hr}></div>}
+                {(googleCanonical || userCanonical) && <div className={style.hr}></div>}
 
-                {$get('indexStatusResult.verdict', data) === 'PASS' && <ToggablePanel style="condensed">
+                {(googleCanonical || userCanonical) && <ToggablePanel style="condensed">
                     <ToggablePanel.Header className={style.panelheader}>
-                        <Icon icon="link" padded="right" />
+                        <Icon icon={canonicalMismatch ? 'exclamation-triangle' : 'link'} color={canonicalMismatch ? 'warn' : undefined} padded="right" />
                         Canonical
                     </ToggablePanel.Header>
                     <ToggablePanel.Contents className={style.panelcontents}>
                         <div className={style.inner}>
+                            {canonicalMismatch && <span className={style.text}>
+                                Google ignores the canonical this page declares and indexes the URL below instead.
+                            </span>}
+
                             {$get('indexStatusResult.googleCanonical', data) && <div>
                                 <b className={style.block}>Google Canonical</b>
 
@@ -144,6 +272,40 @@ export default class InspectorView extends PureComponent {
                 </ToggablePanel>}
             </div>
         );
+    }
+
+    renderMetric(label, key, format, performance, lowerIsBetter = false) {
+        const current = performance.current[key];
+        const previous = performance.previous[key];
+        const diff = current == null || previous == null ? 0 : current - previous;
+        const improved = lowerIsBetter ? diff < 0 : diff > 0;
+
+        return <tr>
+            <td>{label}</td>
+            <td>{format(current)}</td>
+            <td className={diff === 0 ? '' : (improved ? style.better : style.worse)} title={`Before: ${format(previous)}`}>
+                {diff !== 0 && `${diff > 0 ? '+' : '-'}${format(Math.abs(diff))}`}
+            </td>
+        </tr>
+    }
+
+    renderHintQueries(rows) {
+        return <table className={style.table}>
+            <thead>
+                <tr>
+                    <th>Query</th>
+                    <th title="Impressions">Impr.</th>
+                    <th title="Position">Pos.</th>
+                </tr>
+            </thead>
+            <tbody>
+                {rows.map(row => <tr key={row.query}>
+                    <td>{row.query}</td>
+                    <td>{formatNumber(row.impressions)}</td>
+                    <td>{formatPosition(row.position)}</td>
+                </tr>)}
+            </tbody>
+        </table>
     }
 
     renderVerdict(verdict, label) {

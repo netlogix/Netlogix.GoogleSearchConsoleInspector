@@ -16,6 +16,7 @@ use Neos\Neos\FrontendRouting\Options;
 use Neos\Neos\Fusion\Helper\NodeHelper;
 use Neos\Neos\Service\DataSource\AbstractDataSource;
 use Neos\Neos\Service\LinkingService;
+use Neos\Neos\Service\UserService;
 use Netlogix\GoogleSearchConsoleInspector\Domain\Service\InspectionService;
 use Psr\Http\Message\UriInterface;
 
@@ -29,6 +30,12 @@ final class InspectionDataSource extends AbstractDataSource
      * @Flow\Inject
      */
     protected $inspectionService;
+
+    /**
+     * @var UserService
+     * @Flow\Inject
+     */
+    protected $userService;
 
     /**
      * @var ObjectManagerInterface
@@ -56,10 +63,23 @@ final class InspectionDataSource extends AbstractDataSource
                 ];
             }
 
-            $result = $this->inspectionService->inspectUri($uri);
+            $force = !empty($arguments['force']);
+            $result = $this->inspectionService->inspectUri($uri, $force, $this->userService->getInterfaceLanguage());
+
+            $performance = $this->inspectionService->pagePerformance($uri, $force);
+            // Not part of the cached performance data, so edits to the page show up right away
+            $performance['hints'] = $this->inspectionService->contentHints(
+                $performance['queries'],
+                implode(' ', array_filter(
+                    array_map($node->getProperty(...), ['title', 'titleOverride', 'metaDescription']),
+                    'is_string'
+                ))
+            );
 
             return [
-                'data' => json_decode(json_encode($result->toSimpleObject()), true),
+                'data' => json_decode(json_encode($result->toSimpleObject()), true) + [
+                    'performance' => $performance,
+                ],
             ];
         } catch (\Throwable $t) {
             return [
